@@ -56,9 +56,7 @@ extern crate crossbeam_channel;
 extern crate cssparser;
 extern crate euclid;
 #[cfg(feature = "servo")]
-extern crate hyper;
-#[cfg(feature = "servo")]
-extern crate hyper_serde;
+extern crate http;
 #[cfg(feature = "servo")]
 extern crate keyboard_types;
 extern crate selectors;
@@ -492,6 +490,7 @@ macro_rules! malloc_size_of_hash_set {
 }
 
 malloc_size_of_hash_set!(std::collections::HashSet<T, S>);
+malloc_size_of_hash_set!(indexmap::IndexSet<T, S>);
 
 macro_rules! malloc_size_of_hash_map {
     ($ty:ty) => {
@@ -531,6 +530,7 @@ macro_rules! malloc_size_of_hash_map {
 }
 
 malloc_size_of_hash_map!(std::collections::HashMap<K, V, S>);
+malloc_size_of_hash_map!(indexmap::IndexMap<K, V, S>);
 
 impl<K, V> MallocShallowSizeOf for std::collections::BTreeMap<K, V>
 where
@@ -852,6 +852,7 @@ malloc_size_of_is_0!(bool, char, str);
 malloc_size_of_is_0!(u8, u16, u32, u64, u128, usize);
 malloc_size_of_is_0!(i8, i16, i32, i64, i128, isize);
 malloc_size_of_is_0!(f32, f64);
+malloc_size_of_is_0!(std::num::NonZeroU64);
 
 malloc_size_of_is_0!(std::sync::atomic::AtomicBool);
 malloc_size_of_is_0!(std::sync::atomic::AtomicIsize);
@@ -865,8 +866,6 @@ malloc_size_of_is_0!(Range<f32>, Range<f64>);
 malloc_size_of_is_0!(app_units::Au);
 
 malloc_size_of_is_0!(cssparser::TokenSerializationType, cssparser::SourceLocation, cssparser::SourcePosition);
-
-malloc_size_of_is_0!(dom::ElementState, dom::DocumentState);
 
 malloc_size_of_is_0!(selectors::OpaqueElement);
 
@@ -950,18 +949,12 @@ impl MallocSizeOf for xml5ever::QualName {
 malloc_size_of_is_0!(time::Duration);
 #[cfg(feature = "servo")]
 malloc_size_of_is_0!(time::Tm);
-
 #[cfg(feature = "servo")]
-impl<T> MallocSizeOf for hyper_serde::Serde<T>
-where
-    for<'de> hyper_serde::De<T>: serde::Deserialize<'de>,
-    for<'a> hyper_serde::Ser<'a, T>: serde::Serialize,
-    T: MallocSizeOf,
-{
-    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
-        self.0.size_of(ops)
-    }
-}
+malloc_size_of_is_0!(std::time::Duration);
+#[cfg(feature = "servo")]
+malloc_size_of_is_0!(std::time::SystemTime);
+#[cfg(feature = "servo")]
+malloc_size_of_is_0!(std::time::Instant);
 
 // Placeholder for unique case where internals of Sender cannot be measured.
 // malloc size of is 0 macro complains about type supplied!
@@ -973,7 +966,14 @@ impl<T> MallocSizeOf for crossbeam_channel::Sender<T> {
 }
 
 #[cfg(feature = "servo")]
-impl MallocSizeOf for hyper::StatusCode {
+impl<T> MallocSizeOf for tokio::sync::mpsc::UnboundedSender<T> {
+    fn size_of(&self, _ops: &mut MallocSizeOfOps) -> usize {
+        0
+    }
+}
+
+#[cfg(feature = "servo")]
+impl MallocSizeOf for http::StatusCode {
     fn size_of(&self, _ops: &mut MallocSizeOfOps) -> usize {
         0
     }

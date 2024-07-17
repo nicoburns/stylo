@@ -21,7 +21,6 @@ ${helpers.predefined_type(
     "BoxShadow",
     None,
     engines="gecko servo",
-    servo_pref="layout.legacy_layout",
     vector=True,
     simple_vector_bindings=True,
     animation_value_type="AnimatedBoxShadowList",
@@ -80,7 +79,7 @@ ${helpers.single_keyword(
     "mix-blend-mode",
     """normal multiply screen overlay darken lighten color-dodge
     color-burn hard-light soft-light difference exclusion hue
-    saturation color luminosity plus-lighter""",
+    saturation color luminosity""" + ("plus-lighter" if engine == 'gecko' else ""),
     engines="gecko servo",
     gecko_enum_prefix="StyleBlend",
     animation_value_type="discrete",

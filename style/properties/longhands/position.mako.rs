@@ -35,6 +35,24 @@
     )}
 % endfor
 
+#[cfg(feature = "gecko")]
+macro_rules! impl_align_conversions {
+    ($name: path) => {
+        impl From<u8> for $name {
+            fn from(bits: u8) -> $name {
+                $name(crate::values::specified::align::AlignFlags::from_bits(bits)
+                      .expect("bits contain valid flag"))
+            }
+        }
+
+        impl From<$name> for u8 {
+            fn from(v: $name) -> u8 {
+                v.0.bits()
+            }
+        }
+    };
+}
+
 ${helpers.predefined_type(
     "z-index",
     "ZIndex",
@@ -79,7 +97,7 @@ ${helpers.single_keyword(
     // FIXME: Update Servo to support the same Syntax as Gecko.
     ${helpers.single_keyword(
         "justify-content",
-        "flex-start stretch flex-end center space-between space-around",
+        "start flex-start stretch end flex-end center space-between space-around space-evenly",
         engines="servo",
         servo_pref="layout.flexbox.enabled",
         extra_prefixes="webkit",
@@ -119,7 +137,7 @@ ${helpers.single_keyword(
     // FIXME: Update Servo to support the same Syntax as Gecko.
     ${helpers.single_keyword(
         "align-content",
-        "stretch flex-start flex-end center space-between space-around",
+        "stretch start flex-start end flex-end center space-between space-around space-evenly",
         engines="servo",
         servo_pref="layout.flexbox.enabled",
         extra_prefixes="webkit",
@@ -178,6 +196,9 @@ ${helpers.single_keyword(
         affects="layout",
     )}
 
+    #[cfg(feature = "gecko")]
+    impl_align_conversions!(crate::values::specified::align::AlignItems);
+
     ${helpers.predefined_type(
         "justify-items",
         "JustifyItems",
@@ -187,6 +208,9 @@ ${helpers.single_keyword(
         animation_value_type="discrete",
         affects="layout",
     )}
+
+    #[cfg(feature = "gecko")]
+    impl_align_conversions!(crate::values::specified::align::JustifyItems);
 % endif
 
 // Flex item properties
@@ -252,6 +276,9 @@ ${helpers.predefined_type(
         animation_value_type="discrete",
         affects="layout",
     )}
+
+    #[cfg(feature = "gecko")]
+    impl_align_conversions!(crate::values::specified::align::SelfAlignment);
 % endif
 
 // https://drafts.csswg.org/css-flexbox/#propdef-order

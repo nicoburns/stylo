@@ -11,7 +11,6 @@ use crate::custom_properties::{
     CustomPropertiesBuilder, DeferFontRelativeCustomPropertyResolution,
 };
 use crate::dom::TElement;
-use crate::font_metrics::FontMetricsOrientation;
 use crate::logical_geometry::WritingMode;
 use crate::properties::{
     property_counts, CSSWideKeyword, ComputedValues, DeclarationImportanceIterator, Importance,
@@ -26,12 +25,14 @@ use crate::style_adjuster::StyleAdjuster;
 use crate::stylesheets::container_rule::ContainerSizeQuery;
 use crate::stylesheets::{layer_rule::LayerOrder, Origin};
 use crate::stylist::Stylist;
+#[cfg(feature = "gecko")]
 use crate::values::specified::length::FontBaseSize;
 use crate::values::{computed, specified};
 use fxhash::FxHashMap;
 use servo_arc::Arc;
 use smallvec::SmallVec;
 use std::borrow::Cow;
+#[cfg(feature = "gecko")]
 use std::mem;
 
 /// Whether we're resolving a style with the purposes of reparenting for ::first-line.
@@ -416,12 +417,14 @@ fn tweak_when_ignoring_colors(
     }
 
     // Always honor colors if forced-color-adjust is set to none.
-    let forced = context
-        .builder
-        .get_inherited_text()
-        .clone_forced_color_adjust();
-    if forced == computed::ForcedColorAdjust::None {
-        return;
+    #[cfg(feature = "gecko")] {
+        let forced = context
+            .builder
+            .get_inherited_text()
+            .clone_forced_color_adjust();
+        if forced == computed::ForcedColorAdjust::None {
+            return;
+        }
     }
 
     // Don't override background-color on ::-moz-color-swatch. It is set as an
@@ -754,7 +757,9 @@ impl<'b> Cascade<'b> {
             return;
         }
 
-        let has_writing_mode = apply!(WritingMode) | apply!(Direction) | apply!(TextOrientation);
+        let has_writing_mode = apply!(WritingMode) | apply!(Direction);
+        #[cfg(feature = "gecko")]
+        let has_writing_mode = has_writing_mode | apply!(TextOrientation);
         if has_writing_mode {
             self.compute_writing_mode(context);
         }
@@ -771,39 +776,53 @@ impl<'b> Cascade<'b> {
         // Compute font-family.
         let has_font_family = apply!(FontFamily);
         let has_lang = apply!(XLang);
-        if has_lang {
-            self.recompute_initial_font_family_if_needed(&mut context.builder);
-        }
-        if has_font_family {
-            self.prioritize_user_fonts_if_needed(&mut context.builder);
+
+        #[cfg(feature = "gecko")] {
+            if has_lang {
+                self.recompute_initial_font_family_if_needed(&mut context.builder);
+            }
+            if has_font_family {
+                self.prioritize_user_fonts_if_needed(&mut context.builder);
+            }
         }
 
         // Compute font-size.
-        if apply!(XTextScale) {
-            self.unzoom_fonts_if_needed(&mut context.builder);
-        }
-        let has_font_size = apply!(FontSize);
-        let has_math_depth = apply!(MathDepth);
-        let has_min_font_size_ratio = apply!(MozMinFontSizeRatio);
+        #[cfg(feature = "gecko")] {
+            if apply!(XTextScale) {
+                self.unzoom_fonts_if_needed(&mut context.builder);
+            }
+            let has_font_size = apply!(FontSize);
+            let has_math_depth = apply!(MathDepth);
+            let has_min_font_size_ratio = apply!(MozMinFontSizeRatio);
 
-        if has_math_depth && has_font_size {
-            self.recompute_math_font_size_if_needed(context);
+            if has_math_depth && has_font_size {
+                self.recompute_math_font_size_if_needed(context);
+            }
+            if has_lang || has_font_family {
+                self.recompute_keyword_font_size_if_needed(context);
+            }
+            if has_font_size || has_min_font_size_ratio || has_lang || has_font_family {
+                self.constrain_font_size_if_needed(&mut context.builder);
+            }
         }
-        if has_lang || has_font_family {
-            self.recompute_keyword_font_size_if_needed(context);
-        }
-        if has_font_size || has_min_font_size_ratio || has_lang || has_font_family {
-            self.constrain_font_size_if_needed(&mut context.builder);
+        #[cfg(feature = "servo")]
+        {
+            apply!(FontSize);
+            if has_lang || has_font_family {
+                self.recompute_keyword_font_size_if_needed(context);
+            }
         }
 
         // Compute the rest of the first-available-font-affecting properties.
         apply!(FontWeight);
         apply!(FontStretch);
         apply!(FontStyle);
-        apply!(FontSizeAdjust);
+        #[cfg(feature = "gecko")] {
+            apply!(FontSizeAdjust);
 
-        apply!(ColorScheme);
-        apply!(ForcedColorAdjust);
+            apply!(ColorScheme);
+            apply!(ForcedColorAdjust);
+        }
 
         // Compute the line height.
         apply!(LineHeight);
@@ -1032,6 +1051,7 @@ impl<'b> Cascade<'b> {
             builder.add_flags(ComputedValueFlags::HAS_AUTHOR_SPECIFIED_WORD_SPACING);
         }
 
+        #[cfg(feature = "gecko")]
         if self
             .author_specified
             .contains(LonghandId::FontSynthesisWeight)
@@ -1039,6 +1059,7 @@ impl<'b> Cascade<'b> {
             builder.add_flags(ComputedValueFlags::HAS_AUTHOR_SPECIFIED_FONT_SYNTHESIS_WEIGHT);
         }
 
+        #[cfg(feature = "gecko")]
         if self
             .author_specified
             .contains(LonghandId::FontSynthesisStyle)
@@ -1174,7 +1195,6 @@ impl<'b> Cascade<'b> {
     }
 
     /// Some keyword sizes depend on the font family and language.
-    #[cfg(feature = "gecko")]
     fn recompute_keyword_font_size_if_needed(&self, context: &mut computed::Context) {
         use crate::values::computed::ToComputedValue;
 
@@ -1193,6 +1213,7 @@ impl<'b> Cascade<'b> {
                 },
             };
 
+            #[cfg(feature = "gecko")]
             if font.mScriptUnconstrainedSize == new_size.computed_size {
                 return;
             }

@@ -34,13 +34,14 @@ extern crate debug_unreachable;
 #[macro_use]
 extern crate derive_more;
 #[macro_use]
+#[cfg(feature = "gecko")]
 extern crate gecko_profiler;
 #[cfg(feature = "gecko")]
 #[macro_use]
 pub mod gecko_string_cache;
 #[cfg(feature = "servo")]
 #[macro_use]
-extern crate html5ever;
+extern crate markup5ever;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
@@ -68,6 +69,7 @@ extern crate servo_atoms;
 extern crate static_assertions;
 #[macro_use]
 extern crate style_derive;
+#[cfg(feature = "gecko")]
 #[macro_use]
 extern crate thin_vec;
 #[macro_use]
@@ -155,13 +157,13 @@ pub use servo_atoms::Atom;
 
 #[cfg(feature = "servo")]
 #[allow(missing_docs)]
-pub type LocalName = crate::values::GenericAtomIdent<html5ever::LocalNameStaticSet>;
+pub type LocalName = crate::values::GenericAtomIdent<markup5ever::LocalNameStaticSet>;
 #[cfg(feature = "servo")]
 #[allow(missing_docs)]
-pub type Namespace = crate::values::GenericAtomIdent<html5ever::NamespaceStaticSet>;
+pub type Namespace = crate::values::GenericAtomIdent<markup5ever::NamespaceStaticSet>;
 #[cfg(feature = "servo")]
 #[allow(missing_docs)]
-pub type Prefix = crate::values::GenericAtomIdent<html5ever::PrefixStaticSet>;
+pub type Prefix = crate::values::GenericAtomIdent<markup5ever::PrefixStaticSet>;
 
 pub use style_traits::arc_slice::ArcSlice;
 pub use style_traits::owned_slice::OwnedSlice;
@@ -169,6 +171,7 @@ pub use style_traits::owned_str::OwnedStr;
 
 use std::hash::{BuildHasher, Hash};
 
+#[macro_use]
 pub mod properties;
 
 #[cfg(feature = "gecko")]

@@ -8,21 +8,18 @@
 
 use crate::error_reporting::ContextualParseError;
 use crate::parser::{Parse, ParserContext};
-#[cfg(feature = "gecko")]
 use crate::properties::longhands::font_language_override;
 use crate::shared_lock::{SharedRwLockReadGuard, ToCssWithGuard};
 use crate::str::CssStringWriter;
 use crate::values::computed::font::{FamilyName, FontStretch};
 use crate::values::generics::font::FontStyle as GenericFontStyle;
+use crate::values::specified::font::MetricsOverride;
 use crate::values::specified::font::SpecifiedFontStyle;
-use crate::values::specified::font::{
-    AbsoluteFontWeight, FontStretch as SpecifiedFontStretch, MetricsOverride,
-};
-#[cfg(feature = "gecko")]
+use crate::values::specified::font::{AbsoluteFontWeight, FontStretch as SpecifiedFontStretch};
 use crate::values::specified::font::{FontFeatureSettings, FontVariationSettings};
 use crate::values::specified::url::SpecifiedUrl;
-use crate::values::specified::{Angle, NonNegativePercentage};
-#[cfg(feature = "gecko")]
+use crate::values::specified::Angle;
+use crate::values::specified::NonNegativePercentage;
 use cssparser::UnicodeRange;
 use cssparser::{
     AtRuleParser, CowRcStr, DeclarationParser, Parser, QualifiedRuleParser, RuleBodyItemParser,
@@ -78,6 +75,7 @@ impl Parse for SourceList {
 /// Keywords for the font-face src descriptor's format() function.
 /// ('None' and 'Unknown' are for internal use in gfx, not exposed to CSS.)
 #[derive(Clone, Copy, Debug, Eq, Parse, PartialEq, ToCss, ToShmem)]
+#[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum FontFaceSourceFormatKeyword {
@@ -97,6 +95,7 @@ pub enum FontFaceSourceFormatKeyword {
 /// Flags for the @font-face tech() function, indicating font technologies
 /// required by the resource.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ToShmem)]
+    #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[repr(C)]
 pub struct FontFaceSourceTechFlags(u16);
 bitflags! {
@@ -224,6 +223,7 @@ pub enum FontFaceSourceListComponent {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, ToCss, ToShmem)]
+#[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum FontFaceSourceFormat {
@@ -486,52 +486,6 @@ pub fn parse_font_face_block(
 #[cfg(feature = "servo")]
 pub struct FontFace<'a>(&'a FontFaceRuleData);
 
-/// A list of effective sources that we send over through IPC to the font cache.
-#[cfg(feature = "servo")]
-#[derive(Clone, Debug)]
-#[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
-pub struct EffectiveSources(SourceList);
-
-#[cfg(feature = "servo")]
-impl<'a> FontFace<'a> {
-    /// Returns the list of effective sources for that font-face, that is the
-    /// sources which don't list any format hint, or the ones which list at
-    /// least "truetype" or "opentype".
-    pub fn effective_sources(&self) -> EffectiveSources {
-        EffectiveSources(
-            self.sources()
-                .iter()
-                .rev()
-                .filter(|source| {
-                    if let Source::Url(ref url_source) = **source {
-                        // We support only opentype fonts and truetype is an alias for
-                        // that format. Sources without format hints need to be
-                        // downloaded in case we support them.
-                        url_source.format_hint.as_ref().map_or(true, |hint| {
-                            hint == "truetype" || hint == "opentype" || hint == "woff"
-                        })
-                    } else {
-                        true
-                    }
-                })
-                .cloned()
-                .collect(),
-        )
-    }
-}
-
-#[cfg(feature = "servo")]
-impl Iterator for EffectiveSources {
-    type Item = Source;
-    fn next(&mut self) -> Option<Source> {
-        self.0.pop()
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.0.len(), Some(self.0.len()))
-    }
-}
-
 struct FontFaceRuleParser<'a, 'b: 'a> {
     context: &'a ParserContext<'b>,
     rule: &'a mut FontFaceRuleData,
@@ -745,7 +699,6 @@ macro_rules! font_face_descriptors {
     }
 }
 
-#[cfg(feature = "gecko")]
 font_face_descriptors! {
     mandatory descriptors = [
         /// The name of this font face
@@ -790,18 +743,5 @@ font_face_descriptors! {
 
         /// The size adjustment for this font face.
         "size-adjust" size_adjust / mSizeAdjust: NonNegativePercentage,
-    ]
-}
-
-#[cfg(feature = "servo")]
-font_face_descriptors! {
-    mandatory descriptors = [
-        /// The name of this font face
-        "font-family" family / mFamily: FamilyName,
-
-        /// The alternative sources for this font face.
-        "src" sources / mSrc: SourceList,
-    ]
-    optional descriptors = [
     ]
 }

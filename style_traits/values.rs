@@ -7,6 +7,7 @@
 use app_units::Au;
 use cssparser::ToCss as CssparserToCss;
 use cssparser::{serialize_string, ParseError, Parser, Token, UnicodeRange};
+#[cfg(feature = "gecko")]
 use nsstring::nsCString;
 use servo_arc::Arc;
 use std::fmt::{self, Write};
@@ -99,6 +100,7 @@ pub trait ToCss {
     ///
     /// (This is a convenience wrapper for `to_css` and probably should not be overridden.)
     #[inline]
+    #[cfg(feature = "gecko")]
     fn to_css_nscstring(&self) -> nsCString {
         let mut s = nsCString::new();
         self.to_css(&mut CssWriter::new(&mut s)).unwrap();
@@ -524,7 +526,16 @@ pub mod specified {
     /// Whether to allow negative lengths or not.
     #[repr(u8)]
     #[derive(
-        Clone, Copy, Debug, Deserialize, Eq, MallocSizeOf, PartialEq, PartialOrd, Serialize, ToShmem,
+        Clone,
+        Copy,
+        Debug,
+        Deserialize,
+        Eq,
+        MallocSizeOf,
+        PartialEq,
+        PartialOrd,
+        Serialize,
+        to_shmem_derive::ToShmem,
     )]
     pub enum AllowedNumericType {
         /// Allow all kind of numeric values.

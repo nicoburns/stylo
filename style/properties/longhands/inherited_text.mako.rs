@@ -22,7 +22,6 @@ ${helpers.predefined_type(
     "TextTransform",
     "computed::TextTransform::none()",
     engines="gecko servo",
-    servo_pref="layout.legacy_layout",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text/#propdef-text-transform",
     servo_restyle_damage="rebuild_and_reflow",
@@ -71,7 +70,6 @@ ${helpers.predefined_type(
     "OverflowWrap",
     "computed::OverflowWrap::Normal",
     engines="gecko servo",
-    servo_pref="layout.legacy_layout",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text/#propdef-overflow-wrap",
     aliases="word-wrap",
@@ -84,7 +82,6 @@ ${helpers.predefined_type(
     "WordBreak",
     "computed::WordBreak::Normal",
     engines="gecko servo",
-    servo_pref="layout.legacy_layout",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text/#propdef-word-break",
     servo_restyle_damage="rebuild_and_reflow",
@@ -149,11 +146,14 @@ ${helpers.predefined_type(
 // TODO: `white-space-collapse: discard` not yet supported
 ${helpers.single_keyword(
     name="white-space-collapse",
-    values="collapse preserve preserve-breaks preserve-spaces break-spaces",
-    engines="gecko",
+    values="collapse preserve preserve-breaks break-spaces",
+    extra_gecko_values="preserve-spaces",
+    engines="gecko servo",
     gecko_enum_prefix="StyleWhiteSpaceCollapse",
+    needs_conversion="True",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text-4/#propdef-white-space-collapse",
+    servo_restyle_damage="rebuild_and_reflow",
     affects="layout",
 )}
 
@@ -162,7 +162,6 @@ ${helpers.predefined_type(
     "SimpleShadow",
     None,
     engines="gecko servo",
-    servo_pref="layout.legacy_layout",
     vector=True,
     vector_animation_type="with_zero",
     animation_value_type="AnimatedTextShadowList",
@@ -392,10 +391,12 @@ ${helpers.single_keyword(
 ${helpers.single_keyword(
     "text-wrap-mode",
     "wrap nowrap",
-    engines="gecko",
+    engines="gecko servo",
     gecko_enum_prefix="StyleTextWrapMode",
+    needs_conversion="True",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text-4/#propdef-text-wrap-mode",
+    servo_restyle_damage="rebuild_and_reflow",
     affects="layout",
 )}
 

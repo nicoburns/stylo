@@ -171,7 +171,7 @@ impl WritingMode {
 
     /// Returns the `horizontal-tb` value.
     pub fn horizontal_tb() -> Self {
-        Self::empty()
+        Self::from_bits_truncate(0)
     }
 
     #[inline]
@@ -405,7 +405,7 @@ impl DebugWritingMode {
 
     #[inline]
     fn new(mode: WritingMode) -> DebugWritingMode {
-        DebugWritingMode { mode }
+        DebugWritingMode { mode: mode }
     }
 }
 
@@ -549,6 +549,22 @@ impl<T: Add<T, Output = T>> Add for LogicalSize<T> {
     fn add(self, other: LogicalSize<T>) -> LogicalSize<T> {
         self.debug_writing_mode
             .check_debug(other.debug_writing_mode);
+        LogicalSize {
+            debug_writing_mode: self.debug_writing_mode,
+            inline: self.inline + other.inline,
+            block: self.block + other.block,
+        }
+    }
+}
+
+// TODO(servo#30577) remove this once underlying bugs are fixed
+impl<T: Add<T, Output = T>> LogicalSize<T> {
+    #[inline]
+    pub fn add_or_warn(self, other: LogicalSize<T>) -> LogicalSize<T> {
+        #[cfg(debug_assertions)]
+        if !(self.debug_writing_mode.mode == other.debug_writing_mode.mode) {
+            log::warn!("debug assertion failed! self.debug_writing_mode.mode == other.debug_writing_mode.mode");
+        }
         LogicalSize {
             debug_writing_mode: self.debug_writing_mode,
             inline: self.inline + other.inline,
@@ -717,6 +733,38 @@ impl<T: Copy + Sub<T, Output = T>> LogicalPoint<T> {
     #[inline]
     pub fn to_physical(&self, mode: WritingMode, container_size: Size2D<T>) -> Point2D<T> {
         self.debug_writing_mode.check(mode);
+        if mode.is_vertical() {
+            Point2D::new(
+                if mode.is_vertical_lr() {
+                    self.b
+                } else {
+                    container_size.width - self.b
+                },
+                if mode.is_inline_tb() {
+                    self.i
+                } else {
+                    container_size.height - self.i
+                },
+            )
+        } else {
+            Point2D::new(
+                if mode.is_bidi_ltr() {
+                    self.i
+                } else {
+                    container_size.width - self.i
+                },
+                self.b,
+            )
+        }
+    }
+
+    // TODO(servo#30577) remove this once underlying bugs are fixed
+    #[inline]
+    pub fn to_physical_or_warn(&self, mode: WritingMode, container_size: Size2D<T>) -> Point2D<T> {
+        #[cfg(debug_assertions)]
+        if !(self.debug_writing_mode.mode == mode) {
+            log::warn!("debug assertion failed! self.debug_writing_mode.mode == mode");
+        }
         if mode.is_vertical() {
             Point2D::new(
                 if mode.is_vertical_lr() {
@@ -1043,6 +1091,18 @@ impl<T: Copy> LogicalMargin<T> {
     }
 
     #[inline]
+    pub fn convert(&self, mode_from: WritingMode, mode_to: WritingMode) -> LogicalMargin<T> {
+        if mode_from == mode_to {
+            self.debug_writing_mode.check(mode_from);
+            *self
+        } else {
+            LogicalMargin::from_physical(mode_to, self.to_physical(mode_from))
+        }
+    }
+}
+
+impl<T: Clone> LogicalMargin<T> {
+    #[inline]
     pub fn to_physical(&self, mode: WritingMode) -> SideOffsets2D<T> {
         self.debug_writing_mode.check(mode);
         let top;
@@ -1051,41 +1111,31 @@ impl<T: Copy> LogicalMargin<T> {
         let left;
         if mode.is_vertical() {
             if mode.is_vertical_lr() {
-                left = self.block_start;
-                right = self.block_end;
+                left = self.block_start.clone();
+                right = self.block_end.clone();
             } else {
-                right = self.block_start;
-                left = self.block_end;
+                right = self.block_start.clone();
+                left = self.block_end.clone();
             }
             if mode.is_inline_tb() {
-                top = self.inline_start;
-                bottom = self.inline_end;
+                top = self.inline_start.clone();
+                bottom = self.inline_end.clone();
             } else {
-                bottom = self.inline_start;
-                top = self.inline_end;
+                bottom = self.inline_start.clone();
+                top = self.inline_end.clone();
             }
         } else {
-            top = self.block_start;
-            bottom = self.block_end;
+            top = self.block_start.clone();
+            bottom = self.block_end.clone();
             if mode.is_bidi_ltr() {
-                left = self.inline_start;
-                right = self.inline_end;
+                left = self.inline_start.clone();
+                right = self.inline_end.clone();
             } else {
-                right = self.inline_start;
-                left = self.inline_end;
+                right = self.inline_start.clone();
+                left = self.inline_end.clone();
             }
         }
         SideOffsets2D::new(top, right, bottom, left)
-    }
-
-    #[inline]
-    pub fn convert(&self, mode_from: WritingMode, mode_to: WritingMode) -> LogicalMargin<T> {
-        if mode_from == mode_to {
-            self.debug_writing_mode.check(mode_from);
-            *self
-        } else {
-            LogicalMargin::from_physical(mode_to, self.to_physical(mode_from))
-        }
     }
 }
 
