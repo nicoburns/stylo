@@ -17,7 +17,7 @@ servo = ["string_cache"]
 app_units = "0.7"
 cssparser = "0.34"
 euclid = "0.22"
-selectors = { path = "../selectors" }
+selectors = { version = "0.26", path = "../selectors", package = "stylo_selectors" }
 servo_arc = { path = "../servo_arc", version = "0.4", package = "stylo_arc" }
 smallbitvec = "2.3.0"
 smallvec = "1.13"
