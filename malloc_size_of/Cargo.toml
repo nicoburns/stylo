@@ -1,6 +1,6 @@
 [package]
 name = "stylo_malloc_size_of"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["The Servo Project Developers"]
 documentation = "https://docs.rs/stylo_malloc_size_of/"
 description = "Support crate for Stylo CSS engine"
