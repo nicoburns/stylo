@@ -8,14 +8,16 @@ use crate::color::AbsoluteColor;
 use crate::context::QuirksMode;
 use crate::custom_properties::CssEnvironment;
 use crate::font_metrics::FontMetrics;
-use crate::queries::feature::{AllowsRanges, Evaluator, FeatureFlags, QueryFeatureDescription};
 use crate::logical_geometry::WritingMode;
 use crate::media_queries::MediaType;
 use crate::parser::ParserContext;
 use crate::properties::style_structs::Font;
 use crate::properties::ComputedValues;
-use crate::values::computed::{CSSPixelLength, Context, Length, LineHeight, NonNegativeLength, Resolution};
+use crate::queries::feature::{AllowsRanges, Evaluator, FeatureFlags, QueryFeatureDescription};
 use crate::values::computed::font::GenericFontFamily;
+use crate::values::computed::{
+    CSSPixelLength, Context, Length, LineHeight, NonNegativeLength, Resolution,
+};
 use crate::values::specified::color::ColorSchemeFlags;
 use crate::values::specified::font::{FONT_MEDIUM_LINE_HEIGHT_PX, FONT_MEDIUM_PX};
 use crate::values::specified::ViewportVariant;
@@ -87,6 +89,8 @@ pub struct Device {
     /// Whether any styles computed in the document relied on the viewport size.
     #[ignore_malloc_size_of = "Pure stack type"]
     used_viewport_units: AtomicBool,
+    /// Whether the user prefers light mode or dark mode
+    prefers_color_scheme: PrefersColorScheme,
     /// The CssEnvironment object responsible of getting CSS environment
     /// variables.
     environment: CssEnvironment,
@@ -119,6 +123,7 @@ impl Device {
             used_root_line_height: AtomicBool::new(false),
             used_font_metrics: AtomicBool::new(false),
             used_viewport_units: AtomicBool::new(false),
+            prefers_color_scheme: PrefersColorScheme::Light,
             environment: CssEnvironment,
             font_metrics_provider,
             default_computed_values,
@@ -157,7 +162,8 @@ impl Device {
 
     /// Set the line height of the root element (for rlh), in zoom-independent CSS pixels.
     pub fn set_root_line_height(&self, size: f32) {
-        self.root_line_height.store(size.to_bits(), Ordering::Relaxed);
+        self.root_line_height
+            .store(size.to_bits(), Ordering::Relaxed);
     }
 
     /// Returns the computed line-height for the font in a given computed values instance.
@@ -174,7 +180,8 @@ impl Device {
             LineHeight::Normal => CSSPixelLength::new(0.),
             LineHeight::Number(number) => font.font_size.computed_size() * number.0,
             LineHeight::Length(length) => length.0,
-        }).into()
+        })
+        .into()
     }
 
     /// Get the quirks mode of the current device.
@@ -317,7 +324,7 @@ impl Device {
                     || m == mime::IMAGE_JPEG
                     || m == "image/x-icon"
                     || m == "image/webp"
-            }
+            },
             _ => false,
         }
     }
@@ -358,8 +365,15 @@ fn eval_device_pixel_ratio(context: &Context) -> f32 {
     eval_resolution(context).dppx()
 }
 
+fn eval_prefers_color_scheme(context: &Context, query_value: Option<PrefersColorScheme>) -> bool {
+    match query_value {
+        Some(v) => context.device().prefers_color_scheme == v,
+        None => true,
+    }
+}
+
 /// A list with all the media features that Servo supports.
-pub static MEDIA_FEATURES: [QueryFeatureDescription; 5] = [
+pub static MEDIA_FEATURES: [QueryFeatureDescription; 6] = [
     feature!(
         atom!("width"),
         AllowsRanges::Yes,
@@ -390,7 +404,22 @@ pub static MEDIA_FEATURES: [QueryFeatureDescription; 5] = [
         Evaluator::Float(eval_device_pixel_ratio),
         FeatureFlags::empty(),
     ),
+    feature!(
+        atom!("prefers-color-scheme"),
+        AllowsRanges::No,
+        keyword_evaluator!(eval_prefers_color_scheme, PrefersColorScheme),
+        FeatureFlags::empty(),
+    ),
 ];
+
+/// Values for the prefers-color-scheme media feature.
+#[derive(Clone, Copy, Debug, FromPrimitive, Parse, PartialEq, ToCss, MallocSizeOf)]
+#[repr(u8)]
+#[allow(missing_docs)]
+pub enum PrefersColorScheme {
+    Light,
+    Dark,
+}
 
 /// Possible values for the forced-colors media query.
 /// <https://drafts.csswg.org/mediaqueries-5/#forced-colors>
