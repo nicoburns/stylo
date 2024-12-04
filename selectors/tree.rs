@@ -10,11 +10,10 @@ use crate::bloom::BloomFilter;
 use crate::matching::{ElementSelectorFlags, MatchingContext};
 use crate::parser::SelectorImpl;
 use std::fmt::Debug;
-use std::ptr::NonNull;
 
 /// Opaque representation of an Element, for identity comparisons.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct OpaqueElement(NonNull<()>);
+pub struct OpaqueElement(u64);
 
 unsafe impl Send for OpaqueElement {}
 // This should be safe given that we do not provide a way to recover
@@ -23,17 +22,8 @@ unsafe impl Sync for OpaqueElement {}
 
 impl OpaqueElement {
     /// Creates a new OpaqueElement from an arbitrarily-typed pointer.
-    pub fn new<T>(ptr: &T) -> Self {
-        unsafe {
-            OpaqueElement(NonNull::new_unchecked(
-                ptr as *const T as *const () as *mut (),
-            ))
-        }
-    }
-
-    /// Returns a const ptr to the contained reference.
-    pub unsafe fn as_const_ptr<T>(&self) -> *const T {
-        self.0.as_ptr() as *const T
+    pub fn new(val: u64) -> Self {
+        OpaqueElement(val)
     }
 }
 
