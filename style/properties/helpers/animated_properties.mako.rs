@@ -288,7 +288,7 @@ impl AnimationValue {
                 let value = value.to_computed_value(context);
                 % endif
                 % if to_animated:
-                let value = value.to_animated_value(&crate::values::animated::Context { style });
+                let value = value.to_animated_value(&crate::values::animated::Context { zoom: style.effective_zoom });
                 % endif
 
                 unsafe {
@@ -346,7 +346,7 @@ impl AnimationValue {
 
                         % if prop.animation_type != "discrete":
                         let computed = computed.to_animated_value(&crate::values::animated::Context {
-                            style
+                            zoom: style.effective_zoom
                         });
                         % endif
                         AnimationValue::${prop.camel_case}(computed)
@@ -422,7 +422,7 @@ impl AnimationValue {
                 % if prop.animation_type == "discrete":
                     computed
                 % else:
-                    computed.to_animated_value(&crate::values::animated::Context { style })
+                    computed.to_animated_value(&crate::values::animated::Context { zoom: style.effective_zoom })
                 % endif
                 )
             }

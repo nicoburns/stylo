@@ -174,7 +174,7 @@ impl ToAnimatedValue for LengthPercentage {
     type AnimatedValue = Self;
 
     fn to_animated_value(self, context: &AnimatedContext) -> Self::AnimatedValue {
-        if context.style.effective_zoom.is_one() {
+        if context.zoom.is_one() {
             return self;
         }
         self.map_lengths(|l| l.to_animated_value(context))

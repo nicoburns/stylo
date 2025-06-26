@@ -211,7 +211,7 @@ impl ToAnimatedValue for CSSPixelLength {
     type AnimatedValue = Self;
 
     fn to_animated_value(self, context: &AnimatedContext) -> Self::AnimatedValue {
-        Self(context.style.effective_zoom.unzoom(self.0))
+        Self(context.zoom.unzoom(self.0))
     }
 
     #[inline]

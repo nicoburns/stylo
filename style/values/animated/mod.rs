@@ -9,7 +9,7 @@
 //! module's raison d'être is to ultimately contain all these types.
 
 use crate::color::AbsoluteColor;
-use crate::properties::{PropertyId, ComputedValues};
+use crate::properties::{PropertyId};
 use crate::values::computed::url::ComputedUrl;
 use crate::values::computed::{Angle, Image, Length};
 use crate::values::specified::SVGPathData;
@@ -17,6 +17,8 @@ use crate::values::CSSFloat;
 use app_units::Au;
 use smallvec::SmallVec;
 use std::cmp;
+
+use super::computed::Zoom;
 
 pub mod color;
 pub mod effects;
@@ -131,9 +133,9 @@ pub enum Procedure {
 }
 
 /// The context needed to provide an animated value from a computed value.
-pub struct Context<'a> {
+pub struct Context {
     /// The computed style we're taking the value from.
-    pub style: &'a ComputedValues,
+    pub zoom: Zoom,
 }
 
 /// Conversion between computed values and intermediate values for animations.
