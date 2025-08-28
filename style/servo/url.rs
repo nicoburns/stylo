@@ -29,18 +29,10 @@ use url::Url;
 pub struct CssUrl(#[ignore_malloc_size_of = "Arc"] pub Arc<CssUrlData>);
 
 /// Data shared between CssUrls.
-///
 #[derive(Debug, Deserialize, MallocSizeOf, Serialize, SpecifiedValueInfo)]
 #[repr(C)]
 pub struct CssUrlData {
-    /// The original URI. This might be optional since we may insert computed
-    /// values of images into the cascade directly, and we don't bother to
-    /// convert their serialization.
-    ///
-    /// Refcounted since cloning this should be cheap and data: uris can be
-    /// really large.
-    #[ignore_malloc_size_of = "Arc"]
-    original: Option<Arc<String>>,
+    original: String,
 
     /// The resolved value for the url, if valid.
     #[ignore_malloc_size_of = "Arc"]
@@ -66,10 +58,10 @@ impl CssUrl {
     ///
     /// FIXME(emilio): Should honor CorsMode.
     pub fn parse_from_string(url: String, context: &ParserContext, _: CorsMode) -> Self {
-        let serialization = Arc::new(url);
+        let serialization = url;
         let resolved = context.url_data.0.join(&serialization).ok().map(Arc::new);
         CssUrl(Arc::new(CssUrlData {
-            original: Some(serialization),
+            original: serialization,
             resolved: resolved,
         }))
     }
@@ -87,8 +79,7 @@ impl CssUrl {
     /// either need to change servo to lazily resolve (like Gecko), or note this
     /// information in the tokenizer.
     pub fn is_fragment(&self) -> bool {
-        error!("Can't determine whether the url is a fragment.");
-        false
+        self.original.as_bytes().get(0).is_some_and(|b| *b == b'#')
     }
 
     /// Returns the resolved url if it was valid.
@@ -108,17 +99,17 @@ impl CssUrl {
 
     /// Creates an already specified url value from an already resolved URL
     /// for insertion in the cascade.
-    pub fn for_cascade(url: Arc<::url::Url>) -> Self {
+    pub fn for_cascade(raw_url: String, resolved_url: Arc<::url::Url>) -> Self {
         CssUrl(Arc::new(CssUrlData {
-            original: None,
-            resolved: Some(url),
+            original: raw_url,
+            resolved: Some(resolved_url),
         }))
     }
 
     /// Gets a new url from a string for unit tests.
     pub fn new_for_testing(url: &str) -> Self {
         CssUrl(Arc::new(CssUrlData {
-            original: Some(Arc::new(url.into())),
+            original: url.into(),
             resolved: ::url::Url::parse(url).ok().map(Arc::new),
         }))
     }
@@ -166,25 +157,15 @@ impl ToCss for CssUrl {
     where
         W: Write,
     {
-        let string = match self.0.original {
-            Some(ref original) => &**original,
-            None => match self.resolved {
-                Some(ref url) => url.as_str(),
-                // This can only happen if the url wasn't specified by the
-                // user *and* it's an invalid url that has been transformed
-                // back to specified value via the "uncompute" functionality.
-                None => "about:invalid",
-            },
-        };
-
         dest.write_str("url(")?;
-        string.to_css(dest)?;
+        self.original.to_css(dest)?;
         dest.write_char(')')
     }
 }
 
 /// A specified url() value for servo.
 pub type SpecifiedUrl = CssUrl;
+pub type ComputedUrl = CssUrl;
 
 impl ToComputedValue for SpecifiedUrl {
     type ComputedValue = ComputedUrl;
@@ -192,63 +173,10 @@ impl ToComputedValue for SpecifiedUrl {
     // If we can't resolve the URL from the specified one, we fall back to the original
     // but still return it as a ComputedUrl::Invalid
     fn to_computed_value(&self, _: &Context) -> Self::ComputedValue {
-        match self.resolved {
-            Some(ref url) => ComputedUrl::Valid(url.clone()),
-            None => match self.original {
-                Some(ref url) => ComputedUrl::Invalid(url.clone()),
-                None => {
-                    unreachable!("Found specified url with neither resolved or original URI!");
-                },
-            },
-        }
+        self.clone()
     }
 
     fn from_computed_value(computed: &ComputedUrl) -> Self {
-        let data = match *computed {
-            ComputedUrl::Valid(ref url) => CssUrlData {
-                original: None,
-                resolved: Some(url.clone()),
-            },
-            ComputedUrl::Invalid(ref url) => CssUrlData {
-                original: Some(url.clone()),
-                resolved: None,
-            },
-        };
-        CssUrl(Arc::new(data))
-    }
-}
-
-/// The computed value of a CSS `url()`, resolved relative to the stylesheet URL.
-#[derive(Clone, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize)]
-pub enum ComputedUrl {
-    /// The `url()` was invalid or it wasn't specified by the user.
-    Invalid(#[ignore_malloc_size_of = "Arc"] Arc<String>),
-    /// The resolved `url()` relative to the stylesheet URL.
-    Valid(#[ignore_malloc_size_of = "Arc"] Arc<Url>),
-}
-
-impl ComputedUrl {
-    /// Returns the resolved url if it was valid.
-    pub fn url(&self) -> Option<&Arc<Url>> {
-        match *self {
-            ComputedUrl::Valid(ref url) => Some(url),
-            _ => None,
-        }
-    }
-}
-
-impl ToCss for ComputedUrl {
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: Write,
-    {
-        let string = match *self {
-            ComputedUrl::Valid(ref url) => url.as_str(),
-            ComputedUrl::Invalid(ref invalid_string) => invalid_string,
-        };
-
-        dest.write_str("url(")?;
-        string.to_css(dest)?;
-        dest.write_char(')')
+        computed.clone()
     }
 }
