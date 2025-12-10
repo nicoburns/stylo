@@ -13,6 +13,7 @@ use super::{
     },
 };
 use crate::custom_properties::ComputedValue as ComputedPropertyValue;
+use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
 use crate::properties;
 use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};

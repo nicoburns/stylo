@@ -8,6 +8,7 @@
 
 use crate::color::mix::ColorInterpolationMethod;
 use crate::custom_properties;
+use crate::derives::*;
 use crate::values::generics::{color::GenericLightDark, position::PositionComponent, Optional};
 use crate::values::serialize_atom_identifier;
 use crate::Atom;

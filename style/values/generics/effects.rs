@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 //! Generic types for CSS values related to effects.
+use crate::derives::*;
 
 /// A generic value for a single `box-shadow`.
 #[derive(

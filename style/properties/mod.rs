@@ -20,6 +20,7 @@ pub mod generated {
 }
 
 use crate::custom_properties::{self, ComputedCustomProperties};
+use crate::derives::*;
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{nsCSSPropertyID, AnimatedPropertyID, RefPtr};
 use crate::logical_geometry::WritingMode;
