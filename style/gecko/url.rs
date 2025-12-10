@@ -381,10 +381,7 @@ impl ToCss for ComputedUrl {
     }
 }
 
-lazy_static! {
-    /// A table mapping CssUrlData objects to their lazily created LoadData
-    /// objects.
-    static ref LOAD_DATA_TABLE: RwLock<HashMap<LoadDataKey, Box<LoadData>>> = {
-        Default::default()
-    };
-}
+/// A table mapping CssUrlData objects to their lazily created LoadData
+/// objects.
+static LOAD_DATA_TABLE: LazyStatic<RwLock<HashMap<LoadDataKey, Box<LoadData>>>> =
+    LazyLock::new(|| Default::default());

@@ -40,8 +40,6 @@ extern crate gecko_profiler;
 #[macro_use]
 pub mod gecko_string_cache;
 #[macro_use]
-extern crate lazy_static;
-#[macro_use]
 extern crate log;
 #[cfg(feature = "servo")]
 extern crate web_atoms;

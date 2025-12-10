@@ -69,7 +69,6 @@ icu_segmenter = { version = ">= 1.5, <= 2.*", default-features = false, features
 indexmap = {version = "2", features = ["std"]}
 itertools = "0.14"
 itoa = "1.0"
-lazy_static = "1"
 log = "0.4"
 malloc_size_of = { workspace = true }
 malloc_size_of_derive = "0.1"
