@@ -43,8 +43,6 @@ pub mod gecko_string_cache;
 extern crate log;
 #[cfg(feature = "gecko")]
 pub use nsstring;
-#[cfg(feature = "gecko")]
-extern crate num_cpus;
 #[macro_use]
 extern crate serde;
 pub use servo_arc;
