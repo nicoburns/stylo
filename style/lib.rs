@@ -41,8 +41,6 @@ extern crate gecko_profiler;
 pub mod gecko_string_cache;
 #[macro_use]
 extern crate log;
-#[cfg(feature = "gecko")]
-pub use nsstring;
 #[macro_use]
 extern crate serde;
 pub use servo_arc;
