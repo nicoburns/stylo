@@ -13,7 +13,7 @@ use crate::derives::*;
 use crate::stylesheets::CustomMediaEvaluator;
 use crate::values::{computed, AtomString, DashedIdent};
 use crate::{error_reporting::ContextualParseError, parser::ParserContext};
-use cssparser::{Parser, SourcePosition, Token};
+use cssparser::{match_ignore_ascii_case, Parser, SourcePosition, Token};
 use selectors::kleene_value::KleeneValue;
 use servo_arc::Arc;
 use std::fmt::{self, Write};
