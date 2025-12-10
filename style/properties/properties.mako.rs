@@ -41,6 +41,7 @@ use super::{
     LonghandIdSet, VariableDeclaration, CustomDeclaration,
     WideKeywordDeclaration, NonCustomPropertyIterator,
 };
+use debug_unreachable::debug_unreachable;
 
 <%!
     from collections import defaultdict

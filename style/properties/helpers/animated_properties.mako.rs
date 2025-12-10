@@ -36,6 +36,7 @@ use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::effects::Filter;
 use void::{self, Void};
 use crate::properties_and_values::value::CustomAnimatedValue;
+use debug_unreachable::debug_unreachable;
 
 /// Convert nsCSSPropertyID to TransitionProperty
 #[cfg(feature = "gecko")]
