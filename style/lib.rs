@@ -51,9 +51,6 @@ extern crate malloc_size_of;
 extern crate malloc_size_of_derive;
 #[cfg(feature = "servo")]
 extern crate web_atoms;
-#[allow(unused_extern_crates)]
-#[macro_use]
-extern crate matches;
 #[cfg(feature = "gecko")]
 pub use nsstring;
 #[cfg(feature = "gecko")]
