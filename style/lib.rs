@@ -59,9 +59,6 @@ pub use servo_arc;
 extern crate stylo_atoms;
 #[macro_use]
 extern crate static_assertions;
-#[cfg(feature = "gecko")]
-#[macro_use]
-extern crate thin_vec;
 
 #[macro_use]
 mod macros;
