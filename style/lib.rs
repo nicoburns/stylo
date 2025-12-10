@@ -43,8 +43,6 @@ pub mod gecko_string_cache;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate malloc_size_of;
 #[cfg(feature = "servo")]
 extern crate web_atoms;
 #[cfg(feature = "gecko")]
