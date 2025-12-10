@@ -4,6 +4,7 @@
 
 //! Different objects protected by the same lock
 
+use crate::derives::*;
 use crate::stylesheets::Origin;
 #[cfg(feature = "gecko")]
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};

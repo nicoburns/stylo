@@ -45,8 +45,6 @@ extern crate lazy_static;
 extern crate log;
 #[macro_use]
 extern crate malloc_size_of;
-#[macro_use]
-extern crate malloc_size_of_derive;
 #[cfg(feature = "servo")]
 extern crate web_atoms;
 #[cfg(feature = "gecko")]
@@ -64,19 +62,19 @@ extern crate static_assertions;
 #[cfg(feature = "gecko")]
 #[macro_use]
 extern crate thin_vec;
-#[macro_use]
-extern crate to_shmem_derive;
 
 #[macro_use]
 mod macros;
 
 mod derives {
     pub(crate) use derive_more::{Add, AddAssign, Deref, DerefMut, From};
+    pub(crate) use malloc_size_of_derive::MallocSizeOf;
     pub(crate) use num_derive::FromPrimitive;
     pub(crate) use style_derive::{
         Animate, ComputeSquaredDistance, Parse, SpecifiedValueInfo, ToAnimatedValue,
         ToAnimatedZero, ToComputedValue, ToCss, ToResolvedValue, ToTyped,
     };
+    pub(crate) use to_shmem_derive::ToShmem;
 }
 
 pub mod applicable_declarations;

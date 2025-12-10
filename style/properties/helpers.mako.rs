@@ -109,7 +109,7 @@
             #[allow(unused_imports)]
             use crate::values::resolved::ToResolvedValue;
             #[allow(unused_imports)]
-            use style_derive::{Animate, ComputeSquaredDistance, ToAnimatedValue, Parse, ToAnimatedZero, ToComputedValue, ToResolvedValue, ToCss, SpecifiedValueInfo, ToTyped};
+            use crate::derives::*;
             pub use super::single_value::computed_value as single_value;
             pub use self::single_value::T as SingleComputedValue;
             % if not allow_empty:

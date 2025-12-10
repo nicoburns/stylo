@@ -1414,6 +1414,7 @@ pub mod style_structs {
     use std::hash::{Hash, Hasher};
     use crate::logical_geometry::PhysicalSide;
     use crate::values::specified::color::ColorSchemeFlags;
+    use crate::derives::*;
 
     <%def name="impl_physical_sides(ident, props)">
         /// Gets the value of the longhand of `${ident}` on the `s` side`.

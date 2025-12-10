@@ -14,6 +14,7 @@ use super::{
 };
 use crate::context::QuirksMode;
 use crate::custom_properties;
+use crate::derives::*;
 use crate::error_reporting::{ContextualParseError, ParseErrorReporter};
 use crate::parser::ParserContext;
 use crate::properties::{
