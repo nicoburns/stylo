@@ -3216,6 +3216,25 @@ enum AttributeFlags {
     CaseSensitivityDependsOnName,
 }
 
+#[cfg(feature = "fast_attr_match")]
+fn is_ascii_case_insensitive_html_attr(local_name_lower: &str) -> bool {
+    include!(concat!(
+        env!("OUT_DIR"),
+        "/ascii_case_insensitive_html_attributes.rs"
+    ))
+    .contains(&local_name_lower)
+}
+
+#[cfg(not(feature = "fast_attr_match"))]
+fn is_ascii_case_insensitive_html_attr(local_name_lower: &str) -> bool {
+    include!(concat!(
+        env!("OUT_DIR"),
+        "/ascii_case_insensitive_html_attributes.rs"
+    ))
+    .binary_search(&local_name_lower)
+    .is_ok()
+}
+
 impl AttributeFlags {
     fn to_case_sensitivity(
         self,
@@ -3226,13 +3245,7 @@ impl AttributeFlags {
             AttributeFlags::CaseSensitive => ParsedCaseSensitivity::ExplicitCaseSensitive,
             AttributeFlags::AsciiCaseInsensitive => ParsedCaseSensitivity::AsciiCaseInsensitive,
             AttributeFlags::CaseSensitivityDependsOnName => {
-                if !have_namespace
-                    && include!(concat!(
-                        env!("OUT_DIR"),
-                        "/ascii_case_insensitive_html_attributes.rs"
-                    ))
-                    .contains(local_name_lower)
-                {
+                if !have_namespace && is_ascii_case_insensitive_html_attr(&local_name_lower) {
                     ParsedCaseSensitivity::AsciiCaseInsensitiveIfInHtmlElementInHtmlDocument
                 } else {
                     ParsedCaseSensitivity::CaseSensitive
