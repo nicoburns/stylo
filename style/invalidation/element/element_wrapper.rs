@@ -259,6 +259,11 @@ where
                 .element
                 .match_non_ts_pseudo_class(pseudo_class, context);
         }
+        // NOTE: This relies on the TElement::state() contract: pseudo-classes
+        // with a state flag must be matched by the element via its state bits.
+        // An implementation which matches such a pseudo-class from other data
+        // without mirroring it into the element's state (and thus into
+        // snapshots) will mis-match here during invalidation.
         match self.snapshot().and_then(|s| s.state()) {
             Some(snapshot_state) => snapshot_state.intersects(flag),
             None => self
@@ -280,6 +285,19 @@ where
     }
 
     fn is_link(&self) -> bool {
+        // NOTE: This relies on the TElement::state() contract: an element is a
+        // link if and only if its state intersects VISITED_OR_UNVISITED. An
+        // implementation whose is_link() is derived from other data (e.g. an
+        // href attribute check) without mirroring link-ness into the element's
+        // state (and thus into snapshots) will mis-match :link / :visited /
+        // :any-link here during invalidation.
+        debug_assert_eq!(
+            self.element.is_link(),
+            self.element
+                .state()
+                .intersects(ElementState::VISITED_OR_UNVISITED),
+            "element state must be consistent with is_link()",
+        );
         match self.snapshot().and_then(|s| s.state()) {
             Some(state) => state.intersects(ElementState::VISITED_OR_UNVISITED),
             None => self.element.is_link(),

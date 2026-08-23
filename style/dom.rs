@@ -566,6 +566,18 @@ pub trait TElement:
     ) -> Option<Arc<Locked<PropertyDeclarationBlock>>>;
 
     /// Get this element's state, for non-tree-structural pseudos.
+    ///
+    /// Implementations must keep this consistent with how the element matches
+    /// selectors, since snapshot-based invalidation matches state-dependent
+    /// pseudo-classes against these bits (via `ServoElementSnapshot::state`)
+    /// rather than against the element:
+    ///
+    ///  * Any pseudo-class with a non-empty `state_flag()` that the element
+    ///    matches must have its flag set here.
+    ///  * `Element::is_link()` must be equivalent to
+    ///    `state().intersects(ElementState::VISITED_OR_UNVISITED)`, as
+    ///    `:link`, `:visited` and `:any-link` are matched against snapshots
+    ///    using those bits.
     fn state(&self) -> ElementState;
 
     /// Returns whether this element has a `part` attribute.
