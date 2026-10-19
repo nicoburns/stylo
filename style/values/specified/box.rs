@@ -15,6 +15,8 @@ use crate::values::generics::box_::{
     GenericLineClamp, GenericOverflowClipMargin, GenericPerspective, GenericScrollbarInset,
     MaxLines, OverflowClipMarginBox,
 };
+#[cfg(feature = "servo")]
+use crate::values::generics::box_::{GenericVerticalAlign, VerticalAlignKeyword};
 use crate::values::specified::length::{LengthPercentage, NonNegativeLength};
 use crate::values::specified::{AllowQuirks, NonNegativeNumberOrPercentage, PositiveInteger};
 use cssparser::Parser;
@@ -725,6 +727,25 @@ impl Parse for BaselineShift {
         }
 
         Ok(BaselineShift::Keyword(BaselineShiftKeyword::parse(input)?))
+    }
+}
+
+/// A specified value for the servo engine's `vertical-align`.
+#[cfg(feature = "servo")]
+pub type VerticalAlign = GenericVerticalAlign<LengthPercentage>;
+
+#[cfg(feature = "servo")]
+impl Parse for VerticalAlign {
+    fn parse(context: &ParserContext, input: &mut Parser) -> Result<Self, ParseError> {
+        if let Ok(lp) =
+            input.try_parse(|i| LengthPercentage::parse_quirky(context, i, AllowQuirks::Yes))
+        {
+            return Ok(GenericVerticalAlign::Length(lp));
+        }
+
+        Ok(GenericVerticalAlign::Keyword(VerticalAlignKeyword::parse(
+            input,
+        )?))
     }
 }
 

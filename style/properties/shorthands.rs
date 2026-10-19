@@ -581,6 +581,7 @@ pub mod container {
     }
 }
 
+#[cfg(feature = "gecko")]
 pub mod vertical_align {
     use super::*;
     pub use crate::properties::generated::shorthands::vertical_align::*;
@@ -637,6 +638,39 @@ pub mod vertical_align {
                 self.alignment_baseline.to_css(dest)?;
             }
             Ok(())
+        }
+    }
+}
+
+/// The servo engine's `vertical-align`, which resets `baseline-source` and sets a longhand of
+/// its own, as Blink does. `alignment-baseline` and `baseline-shift` stay separate properties.
+#[cfg(feature = "servo")]
+pub mod vertical_align {
+    use super::*;
+    pub use crate::properties::generated::shorthands::vertical_align::*;
+
+    use crate::values::specified::{BaselineSource, VerticalAlign};
+
+    pub fn parse_value(
+        context: &ParserContext,
+        input: &mut Parser,
+    ) -> Result<Longhands, ParseError> {
+        Ok(expanded! {
+            baseline_source: BaselineSource::Auto,
+            _servo_vertical_align: VerticalAlign::parse(context, input)?,
+        })
+    }
+
+    impl<'a> ToCss for LonghandsToSerialize<'a> {
+        fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+        where
+            W: fmt::Write,
+        {
+            // A `baseline-source` other than `auto` has no `vertical-align` form.
+            if *self.baseline_source != BaselineSource::Auto {
+                return Ok(());
+            }
+            self._servo_vertical_align.to_css(dest)
         }
     }
 }

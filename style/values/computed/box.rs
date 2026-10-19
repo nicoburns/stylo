@@ -27,6 +27,10 @@ pub use crate::values::specified::box_::{
     Visibility, WillChange, WritingModeProperty,
 };
 
+/// A computed value for the servo engine's `vertical-align`.
+#[cfg(feature = "servo")]
+pub type VerticalAlign = crate::values::generics::box_::GenericVerticalAlign<LengthPercentage>;
+
 /// A computed value for the `baseline-shift` property.
 pub type BaselineShift = GenericBaselineShift<LengthPercentage>;
 

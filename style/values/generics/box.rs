@@ -91,6 +91,96 @@ impl<L> ToAnimatedZero for BaselineShift<L> {
     }
 }
 
+/// A keyword of the servo engine's `vertical-align`.
+#[cfg(feature = "servo")]
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Copy,
+    Debug,
+    FromPrimitive,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToAnimatedValue,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+    ToTyped,
+)]
+#[repr(u8)]
+pub enum VerticalAlignKeyword {
+    /// Align the baseline with the parent's baseline.
+    Baseline,
+    /// Lower the baseline to the parent's subscript position.
+    Sub,
+    /// Raise the baseline to the parent's superscript position.
+    Super,
+    /// Align the top of the aligned subtree with the top of the line box.
+    Top,
+    /// Align the top with the top of the parent's content area.
+    TextTop,
+    /// Align the vertical midpoint with the parent's baseline plus half its x-height.
+    Middle,
+    /// Align the bottom of the aligned subtree with the bottom of the line box.
+    Bottom,
+    /// Align the bottom with the bottom of the parent's content area.
+    TextBottom,
+}
+
+/// A generic value for the servo engine's `vertical-align`.
+///
+/// The servo engine's `vertical-align` sets a longhand of its own, as Blink does, so that
+/// `alignment-baseline` and `baseline-shift` stay separate properties that apply to SVG only.
+/// https://drafts.csswg.org/css2/#propdef-vertical-align
+#[cfg(feature = "servo")]
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Copy,
+    Debug,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToAnimatedValue,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+    ToTyped,
+)]
+#[repr(C, u8)]
+pub enum GenericVerticalAlign<LengthPercentage> {
+    /// One of the vertical-align keywords.
+    Keyword(VerticalAlignKeyword),
+    /// Raise (positive value) or lower (negative value) by the length, or by the percentage of
+    /// the line-height.
+    Length(LengthPercentage),
+}
+
+#[cfg(feature = "servo")]
+pub use self::GenericVerticalAlign as VerticalAlign;
+
+#[cfg(feature = "servo")]
+impl<L> VerticalAlign<L> {
+    /// Returns the initial `baseline` value.
+    #[inline]
+    pub fn baseline() -> Self {
+        VerticalAlign::Keyword(VerticalAlignKeyword::Baseline)
+    }
+}
+
+#[cfg(feature = "servo")]
+impl<L> ToAnimatedZero for VerticalAlign<L> {
+    fn to_animated_zero(&self) -> Result<Self, ()> {
+        Err(())
+    }
+}
+
 /// https://drafts.csswg.org/css-sizing-4/#intrinsic-size-override
 #[derive(
     Animate,

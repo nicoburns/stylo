@@ -64,6 +64,8 @@ pub use self::border::{
     BorderImageWidth, BorderRadius, BorderSideOffset, BorderSideWidth, BorderSpacing,
     BoxDecorationBreak, FloatEdge, LineWidth,
 };
+#[cfg(feature = "servo")]
+pub use self::box_::VerticalAlign;
 pub use self::box_::{
     AlignmentBaseline, Appearance, BackfaceVisibility, BaselineShift, BaselineSource, BoxAlign,
     BoxCollapse, BoxDirection, BoxOrient, BoxPack, BreakBetween, BreakWithin, Clear, Contain,

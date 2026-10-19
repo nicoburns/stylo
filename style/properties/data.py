@@ -1099,6 +1099,7 @@ class PropertiesData(object):
         name,
         sub_properties,
         extra_gecko_sub_properties=None,
+        extra_servo_sub_properties=None,
         extra_gecko_aliases=None,
         engine=None,
         *args,
@@ -1111,6 +1112,8 @@ class PropertiesData(object):
                 sub_properties.extend(extra_gecko_sub_properties)
             if extra_gecko_aliases:
                 kwargs.setdefault("aliases", []).extend(extra_gecko_aliases)
+        elif extra_servo_sub_properties:
+            sub_properties.extend(extra_servo_sub_properties)
         sub_properties = [self.longhands_by_name[s] for s in sub_properties]
         shorthand = Shorthand(name, sub_properties, *args, **kwargs)
         self.add_prefixed_aliases(shorthand)
@@ -1147,6 +1150,13 @@ def _add_logical_props(data, props):
     for group in groups:
         for prop in data.logical_groups[group]:
             props.add(prop.name)
+
+
+def _add_servo_vertical_align(props, engine):
+    # The servo engine's `vertical-align` shorthand sets a longhand of its own,
+    # where gecko's sets the longhands listed already.
+    if engine == "servo":
+        props.add("-servo-vertical-align")
 
 
 # These are probably Gecko bugs and should be supported per spec.
@@ -1247,6 +1257,7 @@ class PropertyRestrictions:
         _add_logical_props(data, props)
 
         _remove_common_first_line_and_first_letter_properties(props, data.engine)
+        _add_servo_vertical_align(props, data.engine)
         return props
 
     # https://drafts.csswg.org/css-pseudo/#first-line-styling
@@ -1284,6 +1295,7 @@ class PropertyRestrictions:
         props.remove("box-shadow")
 
         _remove_common_first_line_and_first_letter_properties(props, data.engine)
+        _add_servo_vertical_align(props, data.engine)
         return props
 
     # https://drafts.csswg.org/css-pseudo/#placeholder

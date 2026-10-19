@@ -213,8 +213,12 @@ engine = "gecko"
 sub_properties = ["container-name", "container-type"]
 spec = "https://drafts.csswg.org/css-contain-3/#container-shorthand"
 
+# The servo engine sets `baseline-source` and a longhand of `vertical-align`'s own, as
+# Blink does, and keeps `alignment-baseline` and `baseline-shift` apart from it.
 [vertical-align]
-sub_properties = ["alignment-baseline", "baseline-shift", "baseline-source"]
+sub_properties = []
+extra_gecko_sub_properties = ["alignment-baseline", "baseline-shift", "baseline-source"]
+extra_servo_sub_properties = ["baseline-source", "-servo-vertical-align"]
 spec = "https://drafts.csswg.org/css-inline-3/#transverse-alignment"
 
 [page-break-before]

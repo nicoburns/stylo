@@ -411,6 +411,17 @@ extra_prefixes = ["webkit"]
 servo_restyle_damage = "repaint"
 affects = "paint"
 
+# What the servo engine's `vertical-align` shorthand sets besides `baseline-source`. It stays
+# enabled in content, since a shorthand's CSS-wide keywords reach only such longhands.
+[-servo-vertical-align]
+type = "VerticalAlign"
+initial = "computed::VerticalAlign::baseline()"
+struct = "box"
+engine = "servo"
+spec = "Internal"
+servo_restyle_damage = "rebuild_box"
+affects = "layout"
+
 [baseline-shift]
 type = "BaselineShift"
 initial = "computed::BaselineShift::zero()"
