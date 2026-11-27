@@ -778,9 +778,10 @@ trait PrivateMatchMethods: TElement {
             .transitions
             .retain(|transition| transition.state != AnimationState::Finished);
 
-        animation_set
-            .animations
-            .retain(|animation| animation.state != AnimationState::Finished);
+        // Finished animations only keep affecting the style through `animation-fill-mode`.
+        animation_set.animations.retain(|animation| {
+            animation.state != AnimationState::Finished || animation.fills_forwards()
+        });
 
         // If the ElementAnimationSet is empty, and don't store it in order to
         // save memory and to avoid extra processing later.

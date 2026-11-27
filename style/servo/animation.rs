@@ -725,6 +725,14 @@ impl Animation {
         progress >= self.current_iteration_end_progress()
     }
 
+    /// Whether this animation keeps applying its end values once it has finished.
+    pub fn fills_forwards(&self) -> bool {
+        matches!(
+            self.fill_mode,
+            AnimationFillMode::Forwards | AnimationFillMode::Both
+        )
+    }
+
     /// Updates the appropiate state from other animation.
     ///
     /// This happens when an animation is re-submitted to layout, presumably
